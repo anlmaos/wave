@@ -1,0 +1,11 @@
+{
+  "threshold": 50,
+  "reporters": ["console"],
+  "ignore": ["**/target/**", "**/build/**", "**/po/**"],
+  "formatOverrides": {
+    "rust": true,
+    "toml": true,
+    "json": true,
+    "xml": true
+  }
+}

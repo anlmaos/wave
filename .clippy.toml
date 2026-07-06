@@ -1,0 +1,4 @@
+# Cognitive-complexity ceiling.
+# Default is 25; raised to 30 to match typical Rust-GNOME project complexity.
+# Enforced via cargo clippy in CI (.gitlab-ci.yml) and pre-commit hooks.
+cognitive-complexity-threshold = 30

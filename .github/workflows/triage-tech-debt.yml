@@ -1,0 +1,61 @@
+name: Triage Tech Debt
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1" # weekly Monday 06:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  scan-todos:
+    name: Scan TODO/FIXME references
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find TODO/FIXME comments
+        id: scan
+        run: |
+          echo "TODOS<<EOF" >> $GITHUB_OUTPUT
+          grep -rEn '(//|#)\s*(TODO|FIXME|HACK|XXX)\s*\(' src --include='*.rs' --include='*.toml' --include='*.md' \
+            | tee /tmp/todo-list.txt >> $GITHUB_OUTPUT || true
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create issues for untracked TODOs
+        if: steps.scan.outputs.TODOS != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          IFS=$'\n'
+          for line in $(cat /tmp/todo-list.txt); do
+            # Parse "file:line:TODO(...): description"
+            file=$(echo "$line" | cut -d: -f1)
+            lineno=$(echo "$line" | cut -d: -f2)
+            rest=$(echo "$line" | cut -d: -f3-)
+            title=$(echo "$rest" | sed -E 's/^\s*(TODO|FIXME|HACK|XXX)\([^)]*\):\s*//' | cut -c1-80)
+            ref=$(echo "$rest" | grep -oE 'https?://[^ )]+|#[0-9]+' | head -c1 || echo "")
+            body="Auto-filed from \`${file}:${lineno}\`.\n\n\`\`\`\n${rest}\n\`\`\`\n\nClose this issue when the underlying TODO is resolved."
+
+            skip=0
+            # Skip if already has a GitHub issue reference we can link to
+            if echo "$rest" | grep -qE 'github\.com/animaios/animawave/issues/[0-9]+|#[0-9]+'; then
+              skip=1
+            fi
+            # Skip upstream-tracker-only items (non-actionable)
+            echo "$rest" | grep -qE 'https://gitlab\.gnome\.org|https://github\.com/GNOME|https://crates\.io' && skip=1
+
+            if [ "$skip" -eq 0 ]; then
+              gh issue create \
+                --title "${title}" \
+                --body "${body}" \
+                --label "tech-debt" \
+                --label "type:chore" || true
+            fi
+          done

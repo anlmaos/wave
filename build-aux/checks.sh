@@ -75,6 +75,48 @@ cargo_clippy() {
     execute "cargo-clippy" "cargo clippy --all -- -D warnings"
 }
 
+cargo_cognitive_complexity() {
+    if ! check_tool_availability "cargo-clippy" "cargo clippy --version"; then
+        return
+    fi
+    execute "cognitive-complexity" "cargo clippy --all -- -D warnings -W clippy::cognitive_complexity"
+}
+
+check_large_files() {
+    if ! check_tool_availability "find" "find --version"; then
+        return
+    fi
+    execute "large-files" "./build-aux/check-large-files.sh"
+}
+
+check_tech_debt() {
+    if ! check_tool_availability "grep" "grep --version"; then
+        return
+    fi
+    execute "tech-debt" "./build-aux/check-tech-debt.sh"
+}
+
+check_validate() {
+    if ! check_tool_availability "bash" "bash --version"; then
+        return
+    fi
+    execute "agents-md" "./build-aux/validate-agents-md.sh"
+}
+
+cargo_udeps() {
+    if ! check_tool_availability "cargo-udeps" "cargo +nightly udeps --version"; then
+        return
+    fi
+    execute "cargo-udeps" "cargo +nightly udeps --all-targets"
+}
+
+cargo_coverage() {
+    if ! check_tool_availability "cargo-llvm-cov" "cargo llvm-cov --version"; then
+        return
+    fi
+    execute "cargo-coverage" "cargo llvm-cov --all-features --workspace --fail-under-lines 60"
+}
+
 potfiles() {
     if ! check_tool_availability "potfiles" "git --version"; then
         return
@@ -98,8 +140,32 @@ while [[ "$1" ]]; do case $1 in
         cargo_deny
         exit 0
         ;;
+    cargo_udeps )
+        cargo_udeps
+        exit 0
+        ;;
     cargo_clippy )
         cargo_clippy
+        exit 0
+        ;;
+    cargo_coverage )
+        cargo_coverage
+        exit 0
+        ;;
+    cargo_cognitive_complexity )
+        cargo_cognitive_complexity
+        exit 0
+        ;;
+    check_large_files )
+        check_large_files
+        exit 0
+        ;;
+    check_tech_debt )
+        check_tech_debt
+        exit 0
+        ;;
+    check_validate )
+        check_validate
         exit 0
         ;;
     potfiles )
@@ -115,5 +181,10 @@ esac; shift; done
 cargo_fmt
 cargo_typos
 cargo_deny
+cargo_udeps
 cargo_clippy
+cargo_coverage
+cargo_cognitive_complexity
+check_large_files
+check_tech_debt
 potfiles

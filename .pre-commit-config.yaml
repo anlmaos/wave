@@ -1,0 +1,52 @@
+repos:
+- repo: local
+  hooks:
+  - id: cargo-fmt
+    name: cargo fmt check
+    entry: cargo fmt --all -- --check
+    language: system
+    pass_filenames: false
+  - id: cargo-clippy
+    name: cargo clippy
+    entry: cargo clippy --all -- -D warnings -W clippy::cognitive_complexity
+    language: system
+    pass_filenames: false
+  - id: check-tech-debt
+    name: TODO/FIXME tech-debt check
+    entry: build-aux/check-tech-debt.sh
+    language: system
+    pass_filenames: false
+  - id: cargo-deny
+    name: cargo deny license check
+    entry: cargo deny --log-level error check
+    language: system
+    pass_filenames: false
+  - id: cargo-typos
+    name: typos-cli spellcheck
+    entry: typos
+    language: system
+    types_or: [rust, toml, markdown, ini]
+  - id: check-large-files
+    name: large file line-count check
+    entry: build-aux/check-large-files.sh
+    language: system
+    pass_filenames: false
+  - id: cargo-udeps
+    name: cargo udeps (unused deps)
+    entry: cargo +nightly udeps --all-targets
+    language: system
+    pass_filenames: false
+    types: [rust, toml]
+    stages: [manual]
+  - id: jscpd
+    name: jscpd duplicate-code detection
+    entry: jscpd --config .jscpd.json
+    language: system
+    pass_filenames: false
+    types_or: [rust, toml, json, xml]
+  - id: validate-agents-md
+    name: AGENTS.md command validation
+    entry: build-aux/validate-agents-md.sh
+    language: system
+    pass_filenames: false
+    files: '(^AGENTS\.md$|^docs/.*$|^RUNBOOKS\.md$)'

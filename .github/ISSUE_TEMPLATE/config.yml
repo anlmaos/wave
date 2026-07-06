@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Animawave Discussions
+    url: https://github.com/animaios/animawave/discussions
+    about: "Questions, design probes, and general feedback — please keep Issues for concrete bugs and features."

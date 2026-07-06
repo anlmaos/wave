@@ -1,0 +1,13 @@
+{
+  "name": "animawave-dev",
+  "image": "mcr.microsoft.com/devcontainers/rust:1-1-bookworm",
+  "features": {},
+  "postCreateCommand": "cargo install cargo-watch typos-cli cargo-deny",
+  "customizations": {
+    "vscode": {
+      "settings": {"rust-analyzer.cargo.features": "all"},
+      "extensions": ["vadimcn.vscode-lldb", "tamasfe.even-better-toml", "serayuzgur.crates"]
+    }
+  },
+  "remoteUser": "root"
+}

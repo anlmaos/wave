@@ -1,0 +1,13 @@
+* @haeckerfelix
+/build-aux/ @haeckerfelix
+/.github/workflows/ @haeckerfelix
+/po/ @haeckerfelix
+/src/audio/ @haeckerfelix
+/src/database/ @haeckerfelix
+/src/api/ @haeckerfelix
+/src/device/ @haeckerfelix
+/src/ui/ @haeckerfelix
+/data/ @haeckerfelix
+/docs/ @haeckerfelix
+/AGENTS.md @haeckerfelix
+/RUNBOOKS.md @haeckerfelix
