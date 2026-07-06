@@ -50,3 +50,4 @@ shortwave.pot
 *.syscap
 .goutputstream-VZF7D2
 .pc/
+.env

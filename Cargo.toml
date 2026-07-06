@@ -24,11 +24,13 @@ language-tags = "0.3"
 log = "0.4"
 mdns-sd = "0.13"
 mpris-server = "0.8"
-pretty_env_logger = "0.5"
+env_logger = "0.11"
 rand = "0.8"
 regex = "1.11"
 reqwest = "0.12"
 sanitize-filename = "0.6"
+secret-service = { version = "5.1", features = ["rt-async-io-crypto-rust"] }
+
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
@@ -46,3 +48,6 @@ shumate = { version = "0.6", package = "libshumate"}
 gettext-rs = { version = "0.7", features = ["gettext-system"] }
 adw = { version = "0.7", package = "libadwaita", features = ["v1_7"] }
 gtk = { version = "0.9", package = "gtk4", features = ["gnome_46"] }
+
+[dev-dependencies]
+tempfile = "3"

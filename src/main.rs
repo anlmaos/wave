@@ -16,7 +16,7 @@
 
 #[macro_use]
 extern crate log;
-extern crate pretty_env_logger;
+extern crate env_logger;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
@@ -46,8 +46,32 @@ use gtk::{gio, glib};
 use crate::app::SwApplication;
 
 fn main() -> glib::ExitCode {
-    // Initialize logger
-    pretty_env_logger::init();
+    // Initialize logger with IP redaction
+    use env_logger::Env;
+    env_logger::Builder::from_env(Env::default().default_filter_or("info"))
+        .format(|buf, record| {
+            use std::io::Write;
+            let msg = record.args().to_string();
+
+            // Redact IPv4 addresses
+            let re_ipv4 = regex::Regex::new(r"\b(?:\d{1,3}\.){3}\d{1,3}\b").unwrap();
+            let msg = re_ipv4.replace_all(&msg, "[redacted-ipv4]");
+
+            // Redact IPv6 addresses (simplified pattern)
+            let re_ipv6 =
+                regex::Regex::new(r"\b(?:[0-9a-fA-F]{1,4}:){2,7}[0-9a-fA-F]{1,4}\b").unwrap();
+            let msg = re_ipv6.replace_all(&msg, "[redacted-ipv6]");
+
+            writeln!(
+                buf,
+                "{} [{}] {} - {}",
+                record.level(),
+                record.target(),
+                record.file().unwrap_or("?"),
+                msg,
+            )
+        })
+        .init();
 
     // Initialize paths
     path::init().expect("Unable to create paths.");

@@ -76,5 +76,23 @@
       <description
             >How much audio to buffer before playback starts. Higher values reduce rebuffering on unstable connections.</description>
     </key>
+    <key name="ai-base-url" type="s">
+      <default>""</default>
+      <summary>OpenAI-compatible base URL</summary>
+      <description
+            >Base URL for an OpenAI-compatible chat completions endpoint (e.g. OpenAI, OpenRouter, vLLM, LM Studio). Leave blank to disable AI recommendations.</description>
+    </key>
+    <key name="ai-api-key" type="s">
+      <default>""</default>
+      <summary>API key for the AI backend</summary>
+      <description
+            >API key used with the OpenAI-compatible endpoint. Stored in Secret Service (GNOME Keyring / KWallet) when available; falls back to this GSettings string otherwise.</description>
+    </key>
+    <key name="ai-model" type="s">
+      <default>""</default>
+      <summary>AI model identifier</summary>
+      <description
+            >Model name passed to the endpoint (e.g. gpt-4o-mini, mistral-large). Leave blank to disable AI recommendations.</description>
+    </key>
   </schema>
 </schemalist>
