@@ -46,3 +46,58 @@ pub enum Error {
     #[error("Request cancelled")]
     Cancelled,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io;
+
+    #[test]
+    fn test_deserializer_error_display() {
+        let err_json = serde_json::from_str::<serde_json::Value>("not json");
+        let inner = Rc::new(err_json.unwrap_err());
+        let err = Error::Deserializer(inner);
+        let display = err.to_string();
+        assert!(
+            display.contains("Serde deserializer error"),
+            "Got: {display}"
+        );
+    }
+
+    #[test]
+    fn test_io_error_display() {
+        let io_err = io::Error::new(io::ErrorKind::NotFound, "file missing");
+        let err = Error::Io(Rc::new(io_err));
+        let display = err.to_string();
+        assert!(display.contains("Input/Output error"), "Got: {display}");
+    }
+
+    #[test]
+    fn test_unsupported_url_scheme_display() {
+        let err = Error::UnsupportedUrlScheme;
+        assert_eq!(err.to_string(), "Unsupported url scheme");
+    }
+
+    #[test]
+    fn test_no_server_available_display() {
+        let err = Error::NoServerAvailable;
+        assert_eq!(err.to_string(), "No connectivity with radiobrowser server");
+    }
+
+    #[test]
+    fn test_retry_exhausted_display() {
+        let err = Error::RetryExhausted("timeout".to_string());
+        let display = err.to_string();
+        assert!(
+            display.contains("Request failed after all retry attempts"),
+            "Got: {display}"
+        );
+        assert!(display.contains("timeout"), "Got: {display}");
+    }
+
+    #[test]
+    fn test_cancelled_display() {
+        let err = Error::Cancelled;
+        assert_eq!(err.to_string(), "Request cancelled");
+    }
+}

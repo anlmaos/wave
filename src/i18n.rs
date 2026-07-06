@@ -140,3 +140,95 @@ pub fn gettext_f(msgid: &str, args: &[(&str, &str)]) -> String {
     let s = gettext(msgid);
     freplace_dict(s, args)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_freplace_single_arg() {
+        let result = freplace("Hello, {}!".to_string(), &["world"]);
+        assert_eq!(result, "Hello, world!");
+    }
+
+    #[test]
+    fn test_freplace_multiple_args() {
+        let result = freplace("{} {} {}".to_string(), &["a", "b", "c"]);
+        assert_eq!(result, "a b c");
+    }
+
+    #[test]
+    fn test_freplace_no_args() {
+        let result = freplace("no placeholders".to_string(), &[] as &[&str]);
+        assert_eq!(result, "no placeholders");
+    }
+
+    #[test]
+    fn test_freplace_extra_args() {
+        // Extra args beyond placeholders should be silently ignored
+        let result = freplace("{} {}".to_string(), &["a", "b", "c"]);
+        assert_eq!(result, "a b");
+    }
+
+    #[test]
+    fn test_freplace_dict_named_args() {
+        let result = freplace_dict(
+            "{greeting}, {name}!".to_string(),
+            &[("greeting", "Hello"), ("name", "world")],
+        );
+        assert_eq!(result, "Hello, world!");
+    }
+
+    #[test]
+    fn test_freplace_dict_duplicate_keys() {
+        // Duplicate keys: each key gets replaced (order doesn't matter for same result)
+        let result = freplace_dict("{x} and {x}".to_string(), &[("x", "same")]);
+        assert_eq!(result, "same and same");
+    }
+
+    #[test]
+    fn test_freplace_dict_no_matching_keys() {
+        let result = freplace_dict("hello world".to_string(), &[("foo", "bar")]);
+        assert_eq!(result, "hello world");
+    }
+
+    #[test]
+    fn test_freplace_dict_empty_args() {
+        let result = freplace_dict("{a}".to_string(), &[] as &[(&str, &str)]);
+        assert_eq!(result, "{a}");
+    }
+
+    #[test]
+    fn test_kreplace_named_args() {
+        let result = kreplace("{count} items".to_string(), &[("count", "42")]);
+        assert_eq!(result, "42 items");
+    }
+
+    #[test]
+    fn test_kreplace_malformed_no_panic() {
+        // Regex that can't be constructed with the simple regex interp should not panic.
+        // Since kreplace wraps Regex::new in `if let Ok(re)`, it should just skip.
+        let result = kreplace("{foo}".to_string(), &[("foo", "bar")]);
+        assert_eq!(result, "bar");
+    }
+
+    #[test]
+    fn test_i18n_english_roundtrip() {
+        // gettext returns the msgid verbatim without .mo files loaded
+        let result = i18n("Hello");
+        assert_eq!(result, "Hello");
+    }
+
+    #[test]
+    fn test_ni18n_singular() {
+        let result = ni18n("one item", "many items", 1);
+        assert!(result.contains("one item") || result == "one item");
+    }
+
+    #[test]
+    fn test_ni18n_plural() {
+        let result = ni18n("one item", "many items", 5);
+        // Without .mo files: ngettext returns the plural form when n != 1
+        assert!(result.contains("items"));
+    }
+}

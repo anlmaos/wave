@@ -27,3 +27,55 @@ pub enum SwLibraryStatus {
     Empty,
     Offline,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::str::FromStr;
+
+    #[test]
+    fn test_display() {
+        assert_eq!(SwLibraryStatus::Content.to_string(), "Content");
+        assert_eq!(SwLibraryStatus::Empty.to_string(), "Empty");
+        assert_eq!(SwLibraryStatus::Offline.to_string(), "Offline");
+    }
+
+    #[test]
+    fn test_default_is_content() {
+        assert_eq!(SwLibraryStatus::default(), SwLibraryStatus::Content);
+    }
+
+    #[test]
+    fn test_from_str_ok() {
+        assert_eq!(
+            SwLibraryStatus::from_str("Content").unwrap(),
+            SwLibraryStatus::Content
+        );
+        assert_eq!(
+            SwLibraryStatus::from_str("Empty").unwrap(),
+            SwLibraryStatus::Empty
+        );
+        assert_eq!(
+            SwLibraryStatus::from_str("Offline").unwrap(),
+            SwLibraryStatus::Offline
+        );
+    }
+
+    #[test]
+    fn test_from_str_rejects_unknown() {
+        assert!(SwLibraryStatus::from_str("Bogus").is_err());
+    }
+
+    #[test]
+    fn test_roundtrip() {
+        for variant in [
+            SwLibraryStatus::Content,
+            SwLibraryStatus::Empty,
+            SwLibraryStatus::Offline,
+        ] {
+            let serialized = variant.to_string();
+            let parsed = SwLibraryStatus::from_str(&serialized).unwrap();
+            assert_eq!(parsed, variant);
+        }
+    }
+}

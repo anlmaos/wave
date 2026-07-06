@@ -82,3 +82,35 @@ impl Default for StationRequest {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_url_encode_includes_hidebroken() {
+        let request = StationRequest::default();
+        let encoded = request.url_encode();
+        // serde_urlencoded only serializes Some values
+        assert!(encoded.contains("hidebroken=true"));
+        assert!(!encoded.contains("name="), "None fields should not appear");
+    }
+
+    #[test]
+    fn test_search_for_name_sets_order_and_limit() {
+        let request = StationRequest::search_for_name(Some("jazz".to_string()), 10);
+        let encoded = request.url_encode();
+        assert!(encoded.contains("name=jazz"));
+        assert!(encoded.contains("limit=10"));
+        assert!(encoded.contains("order=votes"));
+        assert!(encoded.contains("reverse=true"));
+    }
+
+    #[test]
+    fn test_url_encode_idempotent() {
+        let request = StationRequest::default();
+        let first = request.url_encode();
+        let second = request.url_encode();
+        assert_eq!(first, second, "Encoding should be stable");
+    }
+}

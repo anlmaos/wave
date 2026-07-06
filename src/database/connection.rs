@@ -48,6 +48,13 @@ pub fn connection() -> Pool {
     POOL.clone()
 }
 
+/// Creates a new connection pool at an arbitrary path — primarily used by tests.
+/// Also runs migrations on the target database.
+#[allow(dead_code)]
+pub fn connection_for_path(path: &str) -> Pool {
+    init_connection_pool(path)
+}
+
 // Inits database connection pool, and run migrations.
 // If there's no database, it get's created automatically.
 fn init_connection_pool(db_path: &str) -> Pool {

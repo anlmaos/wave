@@ -97,6 +97,85 @@ pub fn ellipsize_end<S: std::fmt::Display>(x: S, max_len: usize) -> String {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_duration_zero() {
+        let result = format_duration(0, false);
+        // 0 seconds → falls to else branch (sec == 0, returns secs_str)
+        assert!(result.contains("0") && result.contains("second"));
+    }
+
+    #[test]
+    fn test_format_duration_5s() {
+        let result = format_duration(5, false);
+        assert!(result.contains("5") && result.contains("second"));
+    }
+
+    #[test]
+    fn test_format_duration_65s() {
+        let result = format_duration(65, false);
+        assert!(result.contains("minute") || result.contains("second"));
+    }
+
+    #[test]
+    fn test_format_duration_125s() {
+        let result = format_duration(125, false);
+        assert!(result.contains("minute") && result.contains("second"));
+    }
+
+    #[test]
+    fn test_format_duration_3661s() {
+        let result = format_duration(3661, false);
+        assert!(result.contains("hour"));
+    }
+
+    #[test]
+    fn test_format_duration_7200s() {
+        let result = format_duration(7200, false);
+        assert!(result.contains("hour"));
+    }
+
+    #[test]
+    fn test_ellipsize_end_short_string() {
+        let result = ellipsize_end("hello", 10);
+        assert_eq!(result, "hello");
+    }
+
+    #[test]
+    fn test_ellipsize_end_equal_length() {
+        let result = ellipsize_end("hello", 5);
+        assert_eq!(result, "hello");
+    }
+
+    #[test]
+    fn test_ellipsize_end_truncate() {
+        let result = ellipsize_end("hello world", 5);
+        assert_eq!(result, "hell…");
+    }
+
+    #[test]
+    fn test_ellipsize_end_max_one() {
+        let result = ellipsize_end("hello", 1);
+        // max_len=1, max.max(1)-1 = 0, truncate to 0 chars, push '…'
+        assert_eq!(result, "…");
+    }
+
+    #[test]
+    fn test_ellipsize_end_empty_string() {
+        let result = ellipsize_end("", 5);
+        assert_eq!(result, "");
+    }
+
+    #[test]
+    fn test_ellipsize_end_numeric_input() {
+        let result = ellipsize_end(12345usize, 3);
+        assert_eq!(result, "12…");
+    }
+}
+
 pub async fn background_portal_permissions() -> bool {
     if !ashpd::is_sandboxed().await {
         debug!("App is not sandboxed, background playback is allowed.");
