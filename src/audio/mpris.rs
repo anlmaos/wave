@@ -158,7 +158,7 @@ impl MprisServer {
         if let Some(station) = player.station() {
             metadata = metadata.artist(vec![station.title()]);
 
-            // TODO: Add support for caching / local stations
+            // Note: favicon from remote only; local caching / offline stations are not yet supported.
             if let Some(url) = station.metadata().favicon {
                 metadata = metadata.art_url(url);
             }

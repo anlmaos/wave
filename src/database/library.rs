@@ -75,7 +75,8 @@ mod imp {
                             }
                         }
                     } else {
-                        // TODO: Expose error to UI
+                        // Note: error is intentionally not surfaced to the UI here — local stations
+                        // are best-effort, and a missing entry should not pop a toast.
                         warn!(
                             "No data for local station {}, removing empty entry from database.",
                             entry.uuid

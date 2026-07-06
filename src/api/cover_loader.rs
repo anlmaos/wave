@@ -115,8 +115,8 @@ impl CoverRequest {
         let body_bytes = response.bytes().await?;
 
         // We have to write the data to the disk in order to be able to load them using Glycin
-        // TODO: Load bytes directly
-        // TODO: https://gitlab.gnome.org/GNOME/glycin/-/issues/98
+        // Note: Glycin lacks a bytes-only API; this temp-file workaround depends on
+        // https://gitlab.gnome.org/GNOME/glycin/-/issues/98.
         let bytes = glib::Bytes::from_owned(body_bytes);
         self.tmp_stream
             .output_stream()
