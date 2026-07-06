@@ -1,0 +1,658 @@
+Reading additional input from stdin...
+OpenAI Codex v0.142.5
+--------
+workdir: /home/vi/animawave
+model: gpt-5.5
+provider: anyrouter
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 019f34ce-d7c8-79c1-b085-feabf7c23c4c
+--------
+user
+You are a delegated subagent. In /home/vi/animawave, fix the coverage workflow placement review issue. The new workflow is at ci/coverage.yml but GitHub only discovers workflows from .github/workflows. Move it to .github/workflows/coverage.yml, creating the directory if needed, and remove the old ci/coverage.yml path. Do not edit unrelated CI files. Verify with git status/diff that only the workflow move happened. Return exact file move and verification result.
+codex
+I’m using the `using-superpowers` skill first because the session instructions require it before taking action.
+exec
+/usr/bin/bash -lc "sed -n '1,220p' /home/vi/.agents/skills/superpowers/using-superpowers/SKILL.md" in /home/vi/animawave
+ succeeded in 0ms:
+---
+name: using-superpowers
+description: Use when starting any conversation - establishes how to find and use skills, requiring skill invocation before ANY response including clarifying questions
+---
+
+<SUBAGENT-STOP>
+If you were dispatched as a subagent to execute a specific task, skip this skill.
+</SUBAGENT-STOP>
+
+<EXTREMELY-IMPORTANT>
+If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+
+IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+
+This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+</EXTREMELY-IMPORTANT>
+
+## Instruction Priority
+
+Superpowers skills override default system prompt behavior, but **user instructions always take precedence**:
+
+1. **User's explicit instructions** (CLAUDE.md, GEMINI.md, AGENTS.md, direct requests) — highest priority
+2. **Superpowers skills** — override default system behavior where they conflict
+3. **Default system prompt** — lowest priority
+
+If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
+
+## How to Access Skills
+
+**Never read skill files manually with file tools** — always use your platform's skill-loading mechanism so the skill is properly activated.
+
+**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you — follow it directly.
+
+**In Codex:** Skills load natively. Follow the instructions presented when a skill activates.
+
+**In Copilot CLI:** Use the `skill` tool. Skills are auto-discovered from installed plugins.
+
+**In Gemini CLI:** Skills activate via the `activate_skill` tool. Gemini loads skill metadata at session start and activates the full content on demand.
+
+**In other environments:** Check your platform's documentation for how skills are loaded.
+
+## Platform Adaptation
+
+Skills speak in actions ("dispatch a subagent", "create a todo", "read a file") rather than naming any one runtime's tools. For per-platform tool equivalents and instructions-file conventions, see [claude-code-tools.md](references/claude-code-tools.md), [codex-tools.md](references/codex-tools.md), [copilot-tools.md](references/copilot-tools.md), [gemini-tools.md](references/gemini-tools.md), [pi-tools.md](references/pi-tools.md), and [antigravity-tools.md](references/antigravity-tools.md). Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
+
+# Using Skills
+
+## The Rule
+
+**Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
+
+```dot
+digraph skill_flow {
+    "User message received" [shape=doublecircle];
+    "About to enter plan mode?" [shape=doublecircle];
+    "Already brainstormed?" [shape=diamond];
+    "Invoke brainstorming skill" [shape=box];
+    "Might any skill apply?" [shape=diamond];
+    "Invoke the skill" [shape=box];
+    "Announce: 'Using [skill] to [purpose]'" [shape=box];
+    "Has checklist?" [shape=diamond];
+    "Create a todo per item" [shape=box];
+    "Follow skill exactly" [shape=box];
+    "Respond (including clarifications)" [shape=doublecircle];
+
+    "About to enter plan mode?" -> "Already brainstormed?";
+    "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
+    "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
+    "Invoke brainstorming skill" -> "Might any skill apply?";
+
+    "User message received" -> "Might any skill apply?";
+    "Might any skill apply?" -> "Invoke the skill" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
+    "Invoke the skill" -> "Announce: 'Using [skill] to [purpose]'";
+    "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
+    "Has checklist?" -> "Create a todo per item" [label="yes"];
+    "Has checklist?" -> "Follow skill exactly" [label="no"];
+    "Create a todo per item" -> "Follow skill exactly";
+}
+```
+
+## Red Flags
+
+These thoughts mean STOP—you're rationalizing:
+
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
+| "Let me gather information first" | Skills tell you HOW to gather information. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "This doesn't count as a task" | Action = task. Check for skills. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |
+| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
+| "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+
+## Skill Priority
+
+When multiple skills could apply, use this order:
+
+1. **Process skills first** (brainstorming, systematic-debugging) - these determine HOW to approach the task
+2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+
+"Let's build X" → brainstorming first, then implementation skills.
+"Fix this bug" → systematic-debugging first, then domain-specific skills.
+
+## Skill Types
+
+**Rigid** (TDD, systematic-debugging): Follow exactly. Don't adapt away discipline.
+
+**Flexible** (patterns): Adapt principles to context.
+
+The skill itself tells you which.
+
+## User Instructions
+
+Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+codex
+This is a review-fix task, so I’m also using `receiving-code-review` to handle the requested change without drifting into unrelated CI edits.
+exec
+/usr/bin/bash -lc "sed -n '1,220p' /home/vi/.agents/skills/superpowers/receiving-code-review/SKILL.md" in /home/vi/animawave
+ succeeded in 0ms:
+---
+name: receiving-code-review
+description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+---
+
+# Code Review Reception
+
+## Overview
+
+Code review requires technical evaluation, not emotional performance.
+
+**Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort.
+
+## The Response Pattern
+
+```
+WHEN receiving code review feedback:
+
+1. READ: Complete feedback without reacting
+2. UNDERSTAND: Restate requirement in own words (or ask)
+3. VERIFY: Check against codebase reality
+4. EVALUATE: Technically sound for THIS codebase?
+5. RESPOND: Technical acknowledgment or reasoned pushback
+6. IMPLEMENT: One item at a time, test each
+```
+
+## Forbidden Responses
+
+**NEVER:**
+- "You're absolutely right!" (explicit instruction-file violation)
+- "Great point!" / "Excellent feedback!" (performative)
+- "Let me implement that now" (before verification)
+
+**INSTEAD:**
+- Restate the technical requirement
+- Ask clarifying questions
+- Push back with technical reasoning if wrong
+- Just start working (actions > words)
+
+## Handling Unclear Feedback
+
+```
+IF any item is unclear:
+  STOP - do not implement anything yet
+  ASK for clarification on unclear items
+
+WHY: Items may be related. Partial understanding = wrong implementation.
+```
+
+**Example:**
+```
+your human partner: "Fix 1-6"
+You understand 1,2,3,6. Unclear on 4,5.
+
+❌ WRONG: Implement 1,2,3,6 now, ask about 4,5 later
+✅ RIGHT: "I understand items 1,2,3,6. Need clarification on 4 and 5 before proceeding."
+```
+
+## Source-Specific Handling
+
+### From your human partner
+- **Trusted** - implement after understanding
+- **Still ask** if scope unclear
+- **No performative agreement**
+- **Skip to action** or technical acknowledgment
+
+### From External Reviewers
+```
+BEFORE implementing:
+  1. Check: Technically correct for THIS codebase?
+  2. Check: Breaks existing functionality?
+  3. Check: Reason for current implementation?
+  4. Check: Works on all platforms/versions?
+  5. Check: Does reviewer understand full context?
+
+IF suggestion seems wrong:
+  Push back with technical reasoning
+
+IF can't easily verify:
+  Say so: "I can't verify this without [X]. Should I [investigate/ask/proceed]?"
+
+IF conflicts with your human partner's prior decisions:
+  Stop and discuss with your human partner first
+```
+
+**your human partner's rule:** "External feedback - be skeptical, but check carefully"
+
+## YAGNI Check for "Professional" Features
+
+```
+IF reviewer suggests "implementing properly":
+  grep codebase for actual usage
+
+  IF unused: "This endpoint isn't called. Remove it (YAGNI)?"
+  IF used: Then implement properly
+```
+
+**your human partner's rule:** "You and reviewer both report to me. If we don't need this feature, don't add it."
+
+## Implementation Order
+
+```
+FOR multi-item feedback:
+  1. Clarify anything unclear FIRST
+  2. Then implement in this order:
+     - Blocking issues (breaks, security)
+     - Simple fixes (typos, imports)
+     - Complex fixes (refactoring, logic)
+  3. Test each fix individually
+  4. Verify no regressions
+```
+
+## When To Push Back
+
+Push back when:
+- Suggestion breaks existing functionality
+- Reviewer lacks full context
+- Violates YAGNI (unused feature)
+- Technically incorrect for this stack
+- Legacy/compatibility reasons exist
+- Conflicts with your human partner's architectural decisions
+
+**How to push back:**
+- Use technical reasoning, not defensiveness
+- Ask specific questions
+- Reference working tests/code
+- Involve your human partner if architectural
+
+**If you're uncomfortable pushing back out loud:** Name that tension, then tell your partner about the issue you've seen. They'll appreciate your honesty.
+
+## Acknowledging Correct Feedback
+
+When feedback IS correct:
+```
+✅ "Fixed. [Brief description of what changed]"
+✅ "Good catch - [specific issue]. Fixed in [location]."
+✅ [Just fix it and show in the code]
+
+❌ "You're absolutely right!"
+❌ "Great point!"
+❌ "Thanks for catching that!"
+❌ "Thanks for [anything]"
+❌ ANY gratitude expression
+```
+
+**Why no thanks:** Actions speak. Just fix it. The code itself shows you heard the feedback.
+
+**If you catch yourself about to write "Thanks":** DELETE IT. State the fix instead.
+
+## Gracefully Correcting Your Pushback
+
+If you pushed back and were wrong:
+```
+✅ "You were right - I checked [X] and it does [Y]. Implementing now."
+✅ "Verified this and you're correct. My initial understanding was wrong because [reason]. Fixing."
+
+❌ Long apology
+❌ Defending why you pushed back
+❌ Over-explaining
+```
+
+State the correction factually and move on.
+
+## Common Mistakes
+
+| Mistake | Fix |
+|---------|-----|
+| Performative agreement | State requirement or just act |
+| Blind implementation | Verify against codebase first |
+| Batch without testing | One at a time, test each |
+| Assuming reviewer is right | Check if breaks things |
+| Avoiding pushback | Technical correctness > comfort |
+| Partial implementation | Clarify all items first |
+| Can't verify, proceed anyway | State limitation, ask for direction |
+
+## Real Examples
+
+**Performative Agreement (Bad):**
+```
+Reviewer: "Remove legacy code"
+❌ "You're absolutely right! Let me remove that..."
+```
+
+**Technical Verification (Good):**
+```
+Reviewer: "Remove legacy code"
+✅ "Checking... build target is 10.15+, this API needs 13+. Need legacy for backward compat. Current impl has wrong bundle ID - fix it or drop pre-13 support?"
+```
+
+**YAGNI (Good):**
+```
+Reviewer: "Implement proper metrics tracking with database, date filters, CSV export"
+✅ "Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)? Or is there usage I'm missing?"
+```
+
+**Unclear Item (Good):**
+```
+your human partner: "Fix items 1-6"
+You understand 1,2,3,6. Unclear on 4,5.
+✅ "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing."
+```
+
+## GitHub Thread Replies
+
+When replying to inline review comments on GitHub, reply in the comment thread (`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment.
+
+## The Bottom Line
+
+**External feedback = suggestions to evaluate, not orders to follow.**
+
+Verify. Question. Then implement.
+
+No performative agreement. Technical rigor always.
+
+codex
+I’m checking the current tree and git state first, then I’ll move only the coverage workflow path the review called out.
+exec
+/usr/bin/bash -lc 'git status --short' in /home/vi/animawave
+ succeeded in 0ms:
+ M .gitignore
+ M AGENTS.md
+ M Cargo.lock
+ M Cargo.toml
+ M build-aux/checks.sh
+ M build-aux/de.haeckerfelix.Animawave.Devel.json
+ M data/de.haeckerfelix.Animawave.gschema.xml.in
+ M po/POTFILES.in
+ M src/api/cover_loader.rs
+ M src/api/error.rs
+ M src/api/station_metadata.rs
+ M src/api/station_request.rs
+ M src/audio/mpris.rs
+ M src/database/connection.rs
+ M src/database/library.rs
+ M src/database/library_status.rs
+ M src/i18n.rs
+ M src/main.rs
+ M src/settings/key.rs
+ M src/settings/mod.rs
+ M src/utils.rs
+?? .clippy.toml
+?? .devcontainer/
+?? .env.example
+?? .factory/
+?? .github/
+?? .jscpd.json
+?? .pre-commit-config.yaml
+?? CHANGELOG.md
+?? RUNBOOKS.md
+?? build-aux/check-large-files.sh
+?? build-aux/check-tech-debt.sh
+?? build-aux/generate-changelog.sh
+?? build-aux/validate-agents-md.sh
+?? ci/
+?? docs/
+?? renovate.json
+?? src/settings/secrets.rs
+?? tests/
+
+exec
+/usr/bin/bash -lc "rg --files -g 'coverage.yml' -g '.github/workflows/**' -g 'ci/**'" in /home/vi/animawave
+ succeeded in 0ms:
+ci/coverage.yml
+
+codex
+The workspace already has many unrelated changes, so I’m leaving them untouched. The only action now is creating `.github/workflows` if needed and moving `ci/coverage.yml` there.
+exec
+/usr/bin/bash -lc 'mkdir -p .github/workflows && mv ci/coverage.yml .github/workflows/coverage.yml' in /home/vi/animawave
+ succeeded in 0ms:
+codex
+I’m verifying the path-specific status and diff now. Since the source workflow was untracked, `git diff` may not show file content, so I’m using path-limited status with untracked files expanded.
+exec
+/usr/bin/bash -lc 'git status --short --untracked-files=all -- ci/coverage.yml .github/workflows/coverage.yml' in /home/vi/animawave
+ succeeded in 0ms:
+?? .github/workflows/coverage.yml
+
+exec
+/usr/bin/bash -lc 'test -f .github/workflows/coverage.yml && test ! -e ci/coverage.yml && printf '"'coverage workflow moved\\n'" in /home/vi/animawave
+ succeeded in 0ms:
+coverage workflow moved
+
+exec
+/usr/bin/bash -lc 'git diff -- ci/coverage.yml .github/workflows/coverage.yml' in /home/vi/animawave
+ succeeded in 0ms:
+codex
+I’m doing one more scoped check for CI/workflow paths so the result is precise despite the broader dirty worktree.
+exec
+/usr/bin/bash -lc 'git status --short --untracked-files=all -- .github ci' in /home/vi/animawave
+ succeeded in 0ms:
+?? .github/CODEOWNERS
+?? .github/ISSUE_TEMPLATE/bug_report.md
+?? .github/ISSUE_TEMPLATE/chore.md
+?? .github/ISSUE_TEMPLATE/config.yml
+?? .github/ISSUE_TEMPLATE/feature_request.md
+?? .github/dependabot.yml
+?? .github/labels.yml
+?? .github/pull_request_template.md
+?? .github/workflows/codeql.yml
+?? .github/workflows/coverage.yml
+?? .github/workflows/docs.yml
+?? .github/workflows/triage-tech-debt.yml
+
+exec
+/usr/bin/bash -lc 'rg --files .github ci' in /home/vi/animawave
+ succeeded in 0ms:
+.github/dependabot.yml
+.github/CODEOWNERS
+.github/labels.yml
+.github/pull_request_template.md
+.github/workflows/coverage.yml
+.github/workflows/codeql.yml
+.github/workflows/docs.yml
+.github/workflows/triage-tech-debt.yml
+.github/ISSUE_TEMPLATE/chore.md
+.github/ISSUE_TEMPLATE/config.yml
+.github/ISSUE_TEMPLATE/feature_request.md
+.github/ISSUE_TEMPLATE/bug_report.md
+
+exec
+/usr/bin/bash -lc 'git diff --name-status -- .github ci' in /home/vi/animawave
+ succeeded in 0ms:
+codex
+Before I report completion, I’m using `verification-before-completion` because the task explicitly asks for verified status and diff results.
+exec
+/usr/bin/bash -lc "sed -n '1,240p' /home/vi/.agents/skills/superpowers/verification-before-completion/SKILL.md" in /home/vi/animawave
+ succeeded in 0ms:
+---
+name: verification-before-completion
+description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+---
+
+# Verification Before Completion
+
+## Overview
+
+Claiming work is complete without verification is dishonesty, not efficiency.
+
+**Core principle:** Evidence before claims, always.
+
+**Violating the letter of this rule is violating the spirit of this rule.**
+
+## The Iron Law
+
+```
+NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
+```
+
+If you haven't run the verification command in this message, you cannot claim it passes.
+
+## The Gate Function
+
+```
+BEFORE claiming any status or expressing satisfaction:
+
+1. IDENTIFY: What command proves this claim?
+2. RUN: Execute the FULL command (fresh, complete)
+3. READ: Full output, check exit code, count failures
+4. VERIFY: Does output confirm the claim?
+   - If NO: State actual status with evidence
+   - If YES: State claim WITH evidence
+5. ONLY THEN: Make the claim
+
+Skip any step = lying, not verifying
+```
+
+## Common Failures
+
+| Claim | Requires | Not Sufficient |
+|-------|----------|----------------|
+| Tests pass | Test command output: 0 failures | Previous run, "should pass" |
+| Linter clean | Linter output: 0 errors | Partial check, extrapolation |
+| Build succeeds | Build command: exit 0 | Linter passing, logs look good |
+| Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
+| Regression test works | Red-green cycle verified | Test passes once |
+| Agent completed | VCS diff shows changes | Agent reports "success" |
+| Requirements met | Line-by-line checklist | Tests passing |
+
+## Red Flags - STOP
+
+- Using "should", "probably", "seems to"
+- Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
+- About to commit/push/PR without verification
+- Trusting agent success reports
+- Relying on partial verification
+- Thinking "just this once"
+- Tired and wanting work over
+- **ANY wording implying success without having run verification**
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|--------|---------|
+| "Should work now" | RUN the verification |
+| "I'm confident" | Confidence ≠ evidence |
+| "Just this once" | No exceptions |
+| "Linter passed" | Linter ≠ compiler |
+| "Agent said success" | Verify independently |
+| "I'm tired" | Exhaustion ≠ excuse |
+| "Partial check is enough" | Partial proves nothing |
+| "Different words so rule doesn't apply" | Spirit over letter |
+
+## Key Patterns
+
+**Tests:**
+```
+✅ [Run test command] [See: 34/34 pass] "All tests pass"
+❌ "Should pass now" / "Looks correct"
+```
+
+**Regression tests (TDD Red-Green):**
+```
+✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
+❌ "I've written a regression test" (without red-green verification)
+```
+
+**Build:**
+```
+✅ [Run build] [See: exit 0] "Build passes"
+❌ "Linter passed" (linter doesn't check compilation)
+```
+
+**Requirements:**
+```
+✅ Re-read plan → Create checklist → Verify each → Report gaps or completion
+❌ "Tests pass, phase complete"
+```
+
+**Agent delegation:**
+```
+✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
+❌ Trust agent report
+```
+
+## Why This Matters
+
+From 24 failure memories:
+- your human partner said "I don't believe you" - trust broken
+- Undefined functions shipped - would crash
+- Missing requirements shipped - incomplete features
+- Time wasted on false completion → redirect → rework
+- Violates: "Honesty is a core value. If you lie, you'll be replaced."
+
+## When To Apply
+
+**ALWAYS before:**
+- ANY variation of success/completion claims
+- ANY expression of satisfaction
+- ANY positive statement about work state
+- Committing, PR creation, task completion
+- Moving to next task
+- Delegating to agents
+
+**Rule applies to:**
+- Exact phrases
+- Paraphrases and synonyms
+- Implications of success
+- ANY communication suggesting completion/correctness
+
+## The Bottom Line
+
+**No shortcuts for verification.**
+
+Run the command. Read the output. THEN claim the result.
+
+This is non-negotiable.
+
+codex
+I’m rerunning the focused verification after loading the verification guidance, so the final result is based on fresh command output.
+exec
+/usr/bin/bash -lc 'test -f .github/workflows/coverage.yml && test ! -e ci/coverage.yml && printf '"'OK: .github/workflows/coverage.yml exists; ci/coverage.yml absent\\n'" in /home/vi/animawave
+ succeeded in 0ms:
+OK: .github/workflows/coverage.yml exists; ci/coverage.yml absent
+
+exec
+/usr/bin/bash -lc 'git status --short --untracked-files=all -- ci/coverage.yml .github/workflows/coverage.yml' in /home/vi/animawave
+ succeeded in 0ms:
+?? .github/workflows/coverage.yml
+
+exec
+/usr/bin/bash -lc 'git diff -- ci/coverage.yml .github/workflows/coverage.yml' in /home/vi/animawave
+ succeeded in 0ms:
+codex
+Moved:
+
+`ci/coverage.yml` -> `.github/workflows/coverage.yml`
+
+Verification:
+
+`test`: `.github/workflows/coverage.yml` exists and `ci/coverage.yml` is absent.
+
+`git status --short --untracked-files=all -- ci/coverage.yml .github/workflows/coverage.yml`:
+```text
+?? .github/workflows/coverage.yml
+```
+
+`git diff -- ci/coverage.yml .github/workflows/coverage.yml`: no output, because the workflow was untracked before the move. No unrelated CI files were edited.
+tokens used
+38,718
+Moved:
+
+`ci/coverage.yml` -> `.github/workflows/coverage.yml`
+
+Verification:
+
+`test`: `.github/workflows/coverage.yml` exists and `ci/coverage.yml` is absent.
+
+`git status --short --untracked-files=all -- ci/coverage.yml .github/workflows/coverage.yml`:
+```text
+?? .github/workflows/coverage.yml
+```
+
+`git diff -- ci/coverage.yml .github/workflows/coverage.yml`: no output, because the workflow was untracked before the move. No unrelated CI files were edited.
