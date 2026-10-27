@@ -28,9 +28,12 @@ This repository is a fork of [`maunalinux/shortwave`](https://github.com/maunali
     [radio-browser.info](http://www.radio-browser.info/gui/#/). It's a community database, everybody can contribute information.
 
 ### Building
-1. `git clone https://gitlab.gnome.org/World/Animawave.git`
-2. `cd Animawave`
-3. `meson --prefix=/usr build`
-4. `ninja -C build`
-5. `sudo ninja -C build install`
+1. `git clone https://github.com/anlmaos/wave.git`
+2. `cd wave`
+3. Install dependencies: `rustup default stable` (or nightly) plus system packages `meson ninja pkg-config` and development packages for `sqlite3 openssl dbus-1 glib-2.0 gio-2.0 gtk4 libadwaita-1 shumate-1.0 lcms2 libseccomp gstreamer-1.0 gstreamer-base-1.0 gstreamer-audio-1.0 gstreamer-plugins-base-1.0 gstreamer-plugins-bad-1.0 gstreamer-bad-audio-1.0`.
+4. `meson setup build --prefix=/usr` (add `-Dprofile=development` for a development build)
+5. `ninja -C build`
+6. `sudo ninja -C build install`
+
+Quick start: `meson setup build --profile=development && ninja -C build && ./build/src/animawave`
 

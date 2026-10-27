@@ -5,10 +5,12 @@ install_data(
   install_dir: join_paths(datadir, 'icons', scalable_dir),
 )
 
-install_data(
-  join_paths(scalable_dir, '@0@.png'.format(app_id + '.Devel')),
-  install_dir: join_paths(datadir, 'icons', scalable_dir),
-)
+if profile == 'default'
+  install_data(
+    join_paths(scalable_dir, '@0@.png'.format(base_id + '.Devel')),
+    install_dir: join_paths(datadir, 'icons', scalable_dir),
+  )
+endif
 
 symbolic_dir = join_paths('hicolor', 'symbolic', 'apps')
 
