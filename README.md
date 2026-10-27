@@ -3,9 +3,7 @@
 
 <h3>Animawave is an internet radio player that provides access to a station database with over 50,000 stations carefully selected for you by AI </h3>
 
-## Getting in Touch
-If you have any questions regarding the use or development of Animawave,
-want to discuss design or simply hang out, please join us on our [#animawave:gnome.org](https://matrix.to/#/#animawave:gnome.org) matrix room.
+This repository is a fork of [`~scoopta/glpaper`](https://hg.sr.ht/~scoopta/glpaper) maintained by Anima Labs.
 
 ## FAQ
 - **Why is it called 'Animawave'?**
@@ -28,26 +26,11 @@ want to discuss design or simply hang out, please join us on our [#animawave:gno
 - **Which database does Animawave use?**
 
     [radio-browser.info](http://www.radio-browser.info/gui/#/). It's a community database, everybody can contribute information.
-    
-## Translations
-Translation of this project takes place on the GNOME translation platform,
-[Damned Lies](https://l10n.gnome.org/module/animawave). For further
-information on how to join a language team, or even to create one, please see
-[GNOME Translation Project wiki page](https://wiki.gnome.org/TranslationProject).
 
-## Building
-### Building with GNOME Builder
-To build the development version of Animawave and hack on the code see the
-[general guide](https://welcome.gnome.org/app/Animawave/#getting-the-app-to-build) for
-building GNOME apps with GNOME Builder.
-
-### Building it manually
+### Building
 1. `git clone https://gitlab.gnome.org/World/Animawave.git`
 2. `cd Animawave`
 3. `meson --prefix=/usr build`
 4. `ninja -C build`
 5. `sudo ninja -C build install`
 
-## Code Of Conduct
-We follow the [GNOME Code of Conduct](https://conduct.gnome.org/). All
-communications in project spaces are expected to follow it.
