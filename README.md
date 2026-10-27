@@ -3,7 +3,7 @@
 
 <h3>Animawave is an internet radio player that provides access to a station database with over 50,000 stations carefully selected for you by AI </h3>
 
-This repository is a fork of [`~scoopta/glpaper`](https://hg.sr.ht/~scoopta/glpaper) maintained by Anima Labs.
+This repository is a fork of [`maunalinux/shortwave`](https://github.com/maunalinux/shortwave) maintained by Anima Labs.
 
 ## FAQ
 - **Why is it called 'Animawave'?**
